@@ -1,4 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+using CredentialManagerConsole.PasswordChange;
+using CredentialManagerConsole.WindowsCredentialManager;
 
 namespace CredentialManagerConsole
 {
@@ -11,6 +16,14 @@ namespace CredentialManagerConsole
                 PrintUsage();
                 return;
             }
+
+            var username = args[0];
+            var password = args[1];
+
+            var credentialStore = new CredentialStore();
+
+            var passwordChanger = new PasswordChanger(credentialStore, credentialStore);
+            passwordChanger.ChangePasswordForUsername(username, password);
         }
 
         private static void PrintUsage()
