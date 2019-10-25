@@ -6,7 +6,17 @@ namespace CredentialManagerConsole
     {
         static void Main(string[] args)
         {
-            Console.ReadLine();
+            if (args.Length != 2)
+            {
+                PrintUsage();
+                return;
+            }
+        }
+
+        private static void PrintUsage()
+        {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("cmcp <username> <password>");
         }
     }
 }
