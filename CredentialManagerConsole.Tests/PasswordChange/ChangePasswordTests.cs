@@ -9,11 +9,48 @@ namespace CredentialManagerConsole.Tests.PasswordChange
     public class ChangePasswordTests
     {
         [Test]
+        public void ChangePassword_WhenCredentialStoreHasNullTarget_ShouldNotChangePassword()
+        {
+            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>();
+            var credentialStore = A.Fake<ICredentialStore>();
+            var testCredential = new TestCredential(null);
+            A.CallTo(() => credentialStore.ReadCredentials())
+                .Returns(new List<ICredential>
+                {
+                    testCredential
+                });
+
+            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
+            sut.ChangePasswordForUsername("username", "new_password");
+
+            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(A<ICredential>._, A<string>._))
+                .MustNotHaveHappened();
+        }
+        [Test]
         public void ChangePassword_ForUsernameMatchingStoredCredential_ShouldRequestsPasswordChangeForMatchingCredential()
         {
             var passwordChangeHandler = A.Fake<IPasswordChangeHandler>();
             var credentialStore = A.Fake<ICredentialStore>();
             var testCredential = new TestCredential("username");
+            A.CallTo(() => credentialStore.ReadCredentials())
+                .Returns(new List<ICredential>
+                {
+                    testCredential
+                });
+
+            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
+            sut.ChangePasswordForUsername("username", "new_password");
+
+            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential, "new_password"))
+                .MustHaveHappenedOnceExactly();
+        }
+
+        [Test]
+        public void ChangePassword_WithCaseInsensitiveMatch_ShouldChangePassword()
+        {
+            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>();
+            var credentialStore = A.Fake<ICredentialStore>();
+            var testCredential = new TestCredential("USERNAME");
             A.CallTo(() => credentialStore.ReadCredentials())
                 .Returns(new List<ICredential>
                 {

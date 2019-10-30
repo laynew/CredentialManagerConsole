@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace CredentialManagerConsole.PasswordChange
 {
@@ -15,7 +16,10 @@ namespace CredentialManagerConsole.PasswordChange
 
         public void ChangePasswordForUsername(string username, string newPassword)
         {
-            foreach (var credential in _credentialStore.ReadCredentials().Where(c => c.Username == username))
+            var matchedCredentials = _credentialStore.ReadCredentials() 
+                .Where(c => c.Username != null && c.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var credential in matchedCredentials)
             {
                 _passwordChangeHandler.RequestPasswordChange(credential, newPassword);
             }
