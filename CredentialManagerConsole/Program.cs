@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 using CredentialManagerConsole.PasswordChange;
 using CredentialManagerConsole.WindowsCredentialManager;
 
@@ -22,7 +19,7 @@ namespace CredentialManagerConsole
 
             var credentialStore = new CredentialStore();
 
-            var passwordChanger = new PasswordChanger(credentialStore, credentialStore);
+            var passwordChanger = new PasswordChanger(credentialStore);
             passwordChanger.ChangePasswordForUsername(username, password);
         }
 

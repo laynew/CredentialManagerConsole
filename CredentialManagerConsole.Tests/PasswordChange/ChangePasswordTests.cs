@@ -11,7 +11,6 @@ namespace CredentialManagerConsole.Tests.PasswordChange
         [Test]
         public void ChangePassword_WhenCredentialStoreHasNullTarget_ShouldNotChangePassword()
         {
-            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>();
             var credentialStore = A.Fake<ICredentialStore>();
             var testCredential = new TestCredential(null);
             A.CallTo(() => credentialStore.ReadCredentials())
@@ -20,16 +19,14 @@ namespace CredentialManagerConsole.Tests.PasswordChange
                     testCredential
                 });
 
-            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
+            var sut = new PasswordChanger(credentialStore);
             sut.ChangePasswordForUsername("username", "new_password");
 
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(A<ICredential>._, A<string>._))
-                .MustNotHaveHappened();
+            Assert.True(testCredential.PasswordWasNotChanged());
         }
         [Test]
         public void ChangePassword_ForUsernameMatchingStoredCredential_ShouldRequestsPasswordChangeForMatchingCredential()
         {
-            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>();
             var credentialStore = A.Fake<ICredentialStore>();
             var testCredential = new TestCredential("username");
             A.CallTo(() => credentialStore.ReadCredentials())
@@ -38,17 +35,15 @@ namespace CredentialManagerConsole.Tests.PasswordChange
                     testCredential
                 });
 
-            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
+            var sut = new PasswordChanger(credentialStore);
             sut.ChangePasswordForUsername("username", "new_password");
 
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential, "new_password"))
-                .MustHaveHappenedOnceExactly();
+            Assert.True(testCredential.PasswordWasChangedTo("new_password"));
         }
 
         [Test]
         public void ChangePassword_WithCaseInsensitiveMatch_ShouldChangePassword()
         {
-            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>();
             var credentialStore = A.Fake<ICredentialStore>();
             var testCredential = new TestCredential("USERNAME");
             A.CallTo(() => credentialStore.ReadCredentials())
@@ -57,55 +52,38 @@ namespace CredentialManagerConsole.Tests.PasswordChange
                     testCredential
                 });
 
-            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
+            var sut = new PasswordChanger(credentialStore);
             sut.ChangePasswordForUsername("username", "new_password");
 
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential, "new_password"))
-                .MustHaveHappenedOnceExactly();
-        }
-
-        [Test]
-        public void ChangePassword_DoesNotRequestAnyChanges_WhenCredentialStoreIsEmpty()
-        {
-            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>();
-            var credentialStore = A.Fake<ICredentialStore>();
-            A.CallTo(() => credentialStore.ReadCredentials())
-                .Returns(new List<ICredential>());
-
-            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
-            sut.ChangePasswordForUsername("username", "new_password");
-
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(A<ICredential>._, A<string>._))
-                .MustNotHaveHappened();
+            Assert.True(testCredential.PasswordWasChangedTo("new_password"));
         }
 
         [Test]
         public void ChangePassword_RequestsPasswordChange_OnlyForMatchedCredentialInStore()
         {
-            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>(x => x.Strict());
             var credentialStore = A.Fake<ICredentialStore>();
-            var testCredential = new TestCredential("match");
+
+            var matchedCredential = new TestCredential("match");
+            var unmatchedCredentials = new TestCredential("not matched");
+
             A.CallTo(() => credentialStore.ReadCredentials())
                 .Returns(new List<ICredential>()
                 {
-                    testCredential,
-                    new TestCredential("not matched")
+                    matchedCredential,
+                    unmatchedCredentials
                 });
 
-            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
-
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential, "new_password")).DoesNothing();
+            var sut = new PasswordChanger(credentialStore);
 
             sut.ChangePasswordForUsername("match", "new_password");
 
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential, "new_password"))
-                .MustHaveHappenedOnceExactly();
+            Assert.True(matchedCredential.PasswordWasChangedTo("new_password"));
+            Assert.True(unmatchedCredentials.PasswordWasNotChanged());
         }
 
         [Test]
         public void ChangePassword_RequestsPasswordChange_ForAllMatchedCredentialsInStore()
         {
-            var passwordChangeHandler = A.Fake<IPasswordChangeHandler>(x => x.Strict());
             var credentialStore = A.Fake<ICredentialStore>();
             var testCredential1 = new TestCredential("match");
             var testCredential2 = new TestCredential("match");
@@ -117,15 +95,12 @@ namespace CredentialManagerConsole.Tests.PasswordChange
                     new TestCredential("not matched")
                 });
 
-            var sut = new PasswordChanger(passwordChangeHandler, credentialStore);
-
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential1, "new_password")).DoesNothing();
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential2, "new_password")).DoesNothing();
+            var sut = new PasswordChanger(credentialStore);
 
             sut.ChangePasswordForUsername("match", "new_password");
 
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential1, "new_password")).MustHaveHappenedOnceExactly();
-            A.CallTo(() => passwordChangeHandler.RequestPasswordChange(testCredential2, "new_password")).MustHaveHappenedOnceExactly();
+            Assert.True(testCredential1.PasswordWasChangedTo("new_password"));
+            Assert.True(testCredential2.PasswordWasChangedTo("new_password"));
         }
     }
 }

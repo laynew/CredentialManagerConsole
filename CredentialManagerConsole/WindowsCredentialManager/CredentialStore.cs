@@ -8,20 +8,15 @@ using CredentialManagerConsole.WindowsCredentialManager.Marshalling;
 
 namespace CredentialManagerConsole.WindowsCredentialManager
 {
-    public class CredentialStore : IPasswordChangeHandler, ICredentialStore
+    public class CredentialStore : ICredentialStore
     {
-        public void RequestPasswordChange(ICredential credential, string newPassword)
+        private static void ChangePassword(Credential credential, string newPassword)
         {
-            if (!(credential is CredentialAdapter credentialAdapter))
-            {
-                return;
-            }
-
-            var result = SaveCredential(credentialAdapter.Credential, newPassword);
+            var result = SaveCredential(credential, newPassword);
 
             if (!result)
             {
-                Console.WriteLine($"Failed to change password for {credentialAdapter}.");
+                Console.WriteLine($"Failed to change password for {credential}.");
             }
         }
 
@@ -49,7 +44,7 @@ namespace CredentialManagerConsole.WindowsCredentialManager
         public IReadOnlyList<ICredential> ReadCredentials()
         {
             return EnumerateCredentials()
-                .Select(c => new CredentialAdapter(c))
+                .Select(c => new CredentialAdapter(c, ChangePassword))
                 .ToList();
         }
 

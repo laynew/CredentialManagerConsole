@@ -6,11 +6,9 @@ namespace CredentialManagerConsole.PasswordChange
     public class PasswordChanger
     {
         private readonly ICredentialStore _credentialStore;
-        private readonly IPasswordChangeHandler _passwordChangeHandler;
 
-        public PasswordChanger(IPasswordChangeHandler passwordChangeHandler, ICredentialStore credentialStore)
+        public PasswordChanger(ICredentialStore credentialStore)
         {
-            _passwordChangeHandler = passwordChangeHandler;
             _credentialStore = credentialStore;
         }
 
@@ -21,7 +19,7 @@ namespace CredentialManagerConsole.PasswordChange
 
             foreach (var credential in matchedCredentials)
             {
-                _passwordChangeHandler.RequestPasswordChange(credential, newPassword);
+                credential.ChangePassword(newPassword);
             }
         }
     }
