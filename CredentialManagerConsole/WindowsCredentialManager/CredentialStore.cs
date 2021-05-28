@@ -66,8 +66,12 @@ namespace CredentialManagerConsole.WindowsCredentialManager
                 for (var index = 0; index < count; index++)
                 {
                     var currentData = Marshal.ReadIntPtr(data + index * Marshal.SizeOf<IntPtr>());
-                    var credential = Marshaler.MarshalCredentialInstance(currentData);
-                    credentials.Add(credential);
+                    var marshallResult = Marshaler.MarshalCredentialInstance(currentData);
+                    if (marshallResult.IsSuccess)
+                    {
+                        credentials.Add(marshallResult.Value);
+                    }
+                    // TODO Add logging and log a warning if marshalling fails
                 }
 
                 return credentials;

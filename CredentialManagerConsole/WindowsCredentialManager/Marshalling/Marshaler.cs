@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 
 namespace CredentialManagerConsole.WindowsCredentialManager.Marshalling
@@ -22,13 +23,14 @@ namespace CredentialManagerConsole.WindowsCredentialManager.Marshalling
             public string UserName;
         }
 
-        public static Credential MarshalCredentialInstance(IntPtr pNativeData)
+        public static Result<Credential> MarshalCredentialInstance(IntPtr pNativeData)
         {
             var rawNativeCredential = (NativeCredential)Marshal.PtrToStructure(pNativeData, typeof(NativeCredential));
 
             if (rawNativeCredential.AttributeCount > 0)
             {
-                throw new NotSupportedException($"Credential {rawNativeCredential.TargetName} has more than 0 attributes. This is currently not supported");
+                return Result<Credential>.Fail(
+                    $"Credential {rawNativeCredential.TargetName} has more than 0 attributes. This is currently not supported");
             }
 
             var lCredential = new Credential()
@@ -51,7 +53,7 @@ namespace CredentialManagerConsole.WindowsCredentialManager.Marshalling
                     (int)rawNativeCredential.CredentialBlobSize);
             }
 
-            return lCredential;
+            return Result<Credential>.Success(lCredential);
         }
     }
 }
